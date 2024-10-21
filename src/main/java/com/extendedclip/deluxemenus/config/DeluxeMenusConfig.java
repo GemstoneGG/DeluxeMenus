@@ -594,6 +594,17 @@ public class DeluxeMenusConfig {
             builder.argumentsUsageMessage(c.getString(pre + "args_usage_message", null));
         }
 
+        // xCodiq start
+        if (c.contains(pre + "close_command")) {
+            final List<String> closeCommands = new ArrayList<>();
+            if (c.isList(pre + "close_command")) {
+                closeCommands.addAll(c.getStringList(pre + "close_command"));
+            } else {
+                closeCommands.add(c.getString(pre + "close_command"));
+            }
+            builder.closeCommands(closeCommands);
+        }
+
         int size = 54;
         if (type == InventoryType.CHEST) {
             if (!c.contains(pre + "size")) {
