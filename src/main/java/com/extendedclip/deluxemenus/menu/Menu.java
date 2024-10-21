@@ -167,6 +167,14 @@ public class Menu extends Command {
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
+
+        // xCodiq start
+        holder.getMenu().map(Menu::options).map(MenuOptions::closeCommands).ifPresent(commands -> {
+            for (String command : commands) {
+                player.performCommand(command.replace("%player%", player.getName()));
+            }
+        });
+        // xCodiq end
     }
 
     public static void closeMenuForShutdown(final @NotNull Player player) {
