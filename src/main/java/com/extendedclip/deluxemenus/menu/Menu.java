@@ -1,16 +1,23 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
+import com.extendedclip.deluxemenus.action.ActionType;
+import com.extendedclip.deluxemenus.action.ClickAction;
+import com.extendedclip.deluxemenus.action.ClickActionTask;
+import com.extendedclip.deluxemenus.config.DeluxeMenusConfig;
 import com.extendedclip.deluxemenus.dupe.MenuItemMarker;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
+import com.extendedclip.deluxemenus.utils.Messages;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import me.clip.placeholderapi.util.Msg;
 import org.bukkit.Bukkit;
@@ -171,7 +178,44 @@ public class Menu extends Command {
         // xCodiq start
         holder.getMenu().map(Menu::options).map(MenuOptions::closeCommands).ifPresent(commands -> {
             for (String command : commands) {
-                player.performCommand(command.replace("%player%", player.getName()));
+                ActionType type = ActionType.getByStart(command);
+                if (type == null) continue;
+
+                command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
+
+                ClickAction action = new ClickAction(type, command);
+
+                Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
+
+                if (d.find()) {
+                    action.setDelay(d.group(1));
+                    command = command.replaceFirst(Pattern.quote(d.group()), "");
+                }
+
+                Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
+
+                if (ch.find()) {
+                    action.setChance(ch.group(1));
+                    command = command.replaceFirst(Pattern.quote(ch.group()), "");
+                }
+
+                action.setExecutable(command);
+
+                final ClickActionTask actionTask = new ClickActionTask(
+                        DeluxeMenus.getInstance(),
+                        player.getUniqueId(),
+                        action.getType(),
+                        command,
+                        holder.getTypedArgs(),
+                        true,
+                        true
+                );
+
+                if (action.hasDelay()) {
+                    actionTask.runTaskLater(DeluxeMenus.getInstance(), action.getDelay(holder));
+                } else {
+                    actionTask.runTask(DeluxeMenus.getInstance());
+                }
             }
         });
         // xCodiq end
