@@ -1,7 +1,7 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version("8.1.1")
-    id("com.github.ben-manes.versions") version "0.48.0"
+    id("com.gradleup.shadow") version("8.3.4")
+    id("com.github.ben-manes.versions") version "0.51.0"
 }
 
 // Change to true when releasing
