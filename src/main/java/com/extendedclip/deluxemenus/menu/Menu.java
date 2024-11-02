@@ -10,6 +10,14 @@ import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.extendedclip.deluxemenus.utils.StringUtils;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import me.clip.placeholderapi.util.Msg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -22,13 +30,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Menu extends Command {
 
@@ -173,12 +174,10 @@ public class Menu extends Command {
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
 
-        // xCodiq start
         if (runCloseCommmands) {
             holder.getMenu().map(Menu::options).map(MenuOptions::guiCloseCommands).ifPresent(commands -> {
                 executeCommands(player, commands, holder);
             });
-            // xCodiq end
         }
     }
 

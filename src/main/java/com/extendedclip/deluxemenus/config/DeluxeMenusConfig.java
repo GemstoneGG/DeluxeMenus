@@ -594,7 +594,6 @@ public class DeluxeMenusConfig {
             builder.argumentsUsageMessage(c.getString(pre + "args_usage_message", null));
         }
 
-        // xCodiq start
         if (c.contains(pre + "gui_close_command")) {
             final List<String> guiCloseCommands = new ArrayList<>();
             if (c.isList(pre + "gui_close_command")) {

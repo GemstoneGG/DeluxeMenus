@@ -20,8 +20,8 @@ public class MenuOptions {
     private final boolean parsePlaceholdersAfterArguments;
 
     private final List<String> commands;
-    private final List<String> guiCloseCommands; // xCodiq start
-    private final List<String> guiOpenCommands; // chicoferreira
+    private final List<String> guiCloseCommands;
+    private final List<String> guiOpenCommands;
     private final boolean registerCommands;
     private final List<String> arguments;
     private final List<RequirementList> argumentRequirements;
@@ -41,8 +41,8 @@ public class MenuOptions {
         this.parsePlaceholdersAfterArguments = builder.parsePlaceholdersAfterArguments;
 
         this.commands = builder.commands;
-        this.guiCloseCommands = builder.guiCloseCommands; // xCodiq
-        this.guiOpenCommands = builder.guiOpenCommands; // chicoferreira
+        this.guiCloseCommands = builder.guiCloseCommands;
+        this.guiOpenCommands = builder.guiOpenCommands;
         this.registerCommands = builder.registerCommands;
         this.arguments = builder.arguments;
         this.argumentRequirements = builder.argumentRequirements;
@@ -89,7 +89,6 @@ public class MenuOptions {
         return this.commands;
     }
 
-    // xCodiq start
     public @Nullable List<String> guiCloseCommands() {
         return this.guiCloseCommands;
     }
@@ -97,7 +96,6 @@ public class MenuOptions {
     public @Nullable List<String> guiOpenCommands() {
         return this.guiOpenCommands;
     }
-    // xCodiq end
 
     public boolean registerCommands() {
         return this.registerCommands;
@@ -135,8 +133,8 @@ public class MenuOptions {
                 .parsePlaceholdersInArguments(this.parsePlaceholdersInArguments)
                 .parsePlaceholdersAfterArguments(this.parsePlaceholdersAfterArguments)
                 .commands(this.commands)
-                .guiCloseCommands(this.guiCloseCommands) // xCodiq
-                .guiOpenCommands(this.guiOpenCommands) // chicoferreira
+                .guiCloseCommands(this.guiCloseCommands)
+                .guiOpenCommands(this.guiOpenCommands)
                 .registerCommands(this.registerCommands)
                 .arguments(this.arguments)
                 .argumentRequirements(this.argumentRequirements)
@@ -157,8 +155,8 @@ public class MenuOptions {
         private boolean parsePlaceholdersAfterArguments = false;
 
         private List<String> commands = List.of();
-        private List<String> guiCloseCommands; // xCodiq
-        private List<String> guiOpenCommands; // chicoferreira
+        private List<String> guiCloseCommands;
+        private List<String> guiOpenCommands;
         private boolean registerCommands = false;
         private List<String> arguments = List.of();
         private List<RequirementList> argumentRequirements = List.of();
@@ -213,7 +211,6 @@ public class MenuOptions {
             return this;
         }
 
-        // xCodiq start
         public MenuOptionsBuilder guiCloseCommands(final @Nullable List<String> guiCloseCommands) {
             this.guiCloseCommands = guiCloseCommands;
             return this;
@@ -223,7 +220,6 @@ public class MenuOptions {
             this.guiOpenCommands = guiOpenCommands;
             return this;
         }
-        // xCodiq end
 
         public MenuOptionsBuilder registerCommands(final boolean registerCommands) {
             this.registerCommands = registerCommands;
