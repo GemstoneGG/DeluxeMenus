@@ -127,7 +127,7 @@ public class ClickActionTask extends BukkitRunnable {
                 break;
 
             case CLOSE:
-                Menu.closeMenu(player, true, true);
+                Menu.closeMenu(player, true, false);
                 break;
 
             case OPEN_GUI_MENU:
