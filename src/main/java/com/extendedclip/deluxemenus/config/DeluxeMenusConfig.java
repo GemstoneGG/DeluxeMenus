@@ -595,14 +595,14 @@ public class DeluxeMenusConfig {
         }
 
         // xCodiq start
-        if (c.contains(pre + "close_command")) {
-            final List<String> closeCommands = new ArrayList<>();
-            if (c.isList(pre + "close_command")) {
-                closeCommands.addAll(c.getStringList(pre + "close_command"));
+        if (c.contains(pre + "gui_close_command")) {
+            final List<String> guiCloseCommands = new ArrayList<>();
+            if (c.isList(pre + "gui_close_command")) {
+                guiCloseCommands.addAll(c.getStringList(pre + "gui_close_command"));
             } else {
-                closeCommands.add(c.getString(pre + "close_command"));
+                guiCloseCommands.add(c.getString(pre + "gui_close_command"));
             }
-            builder.closeCommands(closeCommands);
+            builder.guiCloseCommands(guiCloseCommands);
         }
 
         int size = 54;
