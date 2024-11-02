@@ -152,7 +152,7 @@ public class Menu extends Command {
         player.updateInventory();
     }
 
-    public static void closeMenu(final @NotNull Player player, final boolean close, final boolean executeCloseActions) {
+    public static void closeMenu(final @NotNull Player player, final boolean close, final boolean executeCloseActions, final boolean runCloseCommmands) {
         Optional<MenuHolder> optionalHolder = getMenuHolder(player);
         if (optionalHolder.isEmpty()) {
             return;
@@ -176,49 +176,51 @@ public class Menu extends Command {
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
 
         // xCodiq start
-        holder.getMenu().map(Menu::options).map(MenuOptions::closeCommands).ifPresent(commands -> {
-            for (String command : commands) {
-                ActionType type = ActionType.getByStart(command);
-                if (type == null) continue;
+        if (runCloseCommmands) {
+            holder.getMenu().map(Menu::options).map(MenuOptions::closeCommands).ifPresent(commands -> {
+                for (String command : commands) {
+                    ActionType type = ActionType.getByStart(command);
+                    if (type == null) continue;
 
-                command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
+                    command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
 
-                ClickAction action = new ClickAction(type, command);
+                    ClickAction action = new ClickAction(type, command);
 
-                Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
+                    Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
 
-                if (d.find()) {
-                    action.setDelay(d.group(1));
-                    command = command.replaceFirst(Pattern.quote(d.group()), "");
+                    if (d.find()) {
+                        action.setDelay(d.group(1));
+                        command = command.replaceFirst(Pattern.quote(d.group()), "");
+                    }
+
+                    Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
+
+                    if (ch.find()) {
+                        action.setChance(ch.group(1));
+                        command = command.replaceFirst(Pattern.quote(ch.group()), "");
+                    }
+
+                    action.setExecutable(command);
+
+                    final ClickActionTask actionTask = new ClickActionTask(
+                            DeluxeMenus.getInstance(),
+                            player.getUniqueId(),
+                            action.getType(),
+                            command,
+                            holder.getTypedArgs(),
+                            true,
+                            true
+                    );
+
+                    if (action.hasDelay()) {
+                        actionTask.runTaskLater(DeluxeMenus.getInstance(), action.getDelay(holder));
+                    } else {
+                        actionTask.runTask(DeluxeMenus.getInstance());
+                    }
                 }
-
-                Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
-
-                if (ch.find()) {
-                    action.setChance(ch.group(1));
-                    command = command.replaceFirst(Pattern.quote(ch.group()), "");
-                }
-
-                action.setExecutable(command);
-
-                final ClickActionTask actionTask = new ClickActionTask(
-                        DeluxeMenus.getInstance(),
-                        player.getUniqueId(),
-                        action.getType(),
-                        command,
-                        holder.getTypedArgs(),
-                        true,
-                        true
-                );
-
-                if (action.hasDelay()) {
-                    actionTask.runTaskLater(DeluxeMenus.getInstance(), action.getDelay(holder));
-                } else {
-                    actionTask.runTask(DeluxeMenus.getInstance());
-                }
-            }
-        });
-        // xCodiq end
+            });
+            // xCodiq end
+        }
     }
 
     public static void closeMenuForShutdown(final @NotNull Player player) {
@@ -229,7 +231,7 @@ public class Menu extends Command {
     }
 
     public static void closeMenu(final @NotNull Player player, final boolean close) {
-        closeMenu(player, close, false);
+        closeMenu(player, close, true, true);
     }
 
     private void addCommand() {
