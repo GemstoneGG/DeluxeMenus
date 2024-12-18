@@ -779,10 +779,19 @@ public class DeluxeMenusConfig {
                     .hideUnbreakable(c.getBoolean(currentPath + "hide_unbreakable", false))
                     .hideEnchants(c.getBoolean(currentPath + "hide_enchantments", false))
                     .nbtString(c.getString(currentPath + "nbt_string", null))
+                    .nbtByte(c.getString(currentPath + "nbt_byte", null))
+                    .nbtShort(c.getString(currentPath + "nbt_short", null))
                     .nbtInt(c.getString(currentPath + "nbt_int", null))
                     .nbtStrings(c.getStringList(currentPath + "nbt_strings"))
+                    .nbtBytes(c.getStringList(currentPath + "nbt_bytes"))
+                    .nbtShorts(c.getStringList(currentPath + "nbt_shorts"))
                     .nbtInts(c.getStringList(currentPath + "nbt_ints"))
-                    .priority(c.getInt(currentPath + "priority", 1));
+                    .priority(c.getInt(currentPath + "priority", 1))
+                    .hideTooltip(c.getString(currentPath + "hide_tooltip", null))
+                    .enchantmentGlintOverride(c.getString(currentPath + "enchantment_glint_override", null))
+                    .rarity(c.getString(currentPath + "rarity", null))
+                    .tooltipStyle(c.getString(currentPath + "tooltip_style", null))
+                    .itemModel(c.getString(currentPath + "item_model", null));
 
             // Lore Append Mode
             if (c.contains(currentPath + "lore_append_mode")) {
@@ -1076,9 +1085,14 @@ public class DeluxeMenusConfig {
                 case DOES_NOT_HAVE_ITEM:
                     ItemWrapper wrapper = new ItemWrapper();
                     if (c.contains(rPath + ".material")) {
+                        String materialName = c.getString(rPath + ".material");
                         try {
-                            if (!containsPlaceholders(c.getString(rPath + ".material")))
-                                Material.valueOf(c.getString(rPath + ".material").toUpperCase());
+                            if (!containsPlaceholders(materialName) && plugin.getItemHooks().values()
+                                    .stream()
+                                    .filter(x -> materialName.toLowerCase().startsWith(x.getPrefix()))
+                                    .findFirst()
+                                    .orElse(null) == null)
+                                Material.valueOf(materialName.toUpperCase());
                         } catch (Exception ex) {
                             DeluxeMenus.debug(
                                     DebugLevel.HIGHEST,
@@ -1087,7 +1101,7 @@ public class DeluxeMenusConfig {
                             );
                             break;
                         }
-                        wrapper.setMaterial(c.getString(rPath + ".material"));
+                        wrapper.setMaterial(materialName);
                     } else {
                         DeluxeMenus.debug(
                                 DebugLevel.HIGHEST,
@@ -1159,6 +1173,44 @@ public class DeluxeMenusConfig {
                                 DebugLevel.HIGHEST,
                                 Level.WARNING,
                                 "Has Permission requirement at path: " + rPath + " does not contain a permission: entry"
+                        );
+                    }
+                    break;
+                case HAS_PERMISSIONS:
+                case DOES_NOT_HAVE_PERMISSIONS:
+                    if (c.contains(rPath + ".permissions")) {
+                        invert = type == RequirementType.DOES_NOT_HAVE_PERMISSIONS;
+                        int minimum = -1;
+                        if (c.contains(rPath + ".minimum") && (minimum = c.getInt(rPath + ".minimum")) < 1) {
+                            DeluxeMenus.debug(
+                                    DebugLevel.HIGHEST,
+                                    Level.WARNING,
+                                    "Has Permissions requirement at path: " + rPath + " has a minimum lower than 1. All permissions will be checked"
+                            );
+                            minimum = -1;
+                        }
+                        List<String> permissions = c.getStringList(rPath + ".permissions");
+                        if (permissions.isEmpty()) {
+                            DeluxeMenus.debug(
+                                    DebugLevel.HIGHEST,
+                                    Level.WARNING,
+                                    "Has Permissions requirement at path: " + rPath + " has no permissions to check. Ignoring..."
+                            );
+                            break;
+                        } else if (minimum > permissions.size()) {
+                            DeluxeMenus.debug(
+                                    DebugLevel.HIGHEST,
+                                    Level.WARNING,
+                                    "Has Permissions requirement at path: " + rPath + " has a minimum higher than the amount of permissions. Using "+permissions.size()+" instead"
+                            );
+                            minimum = permissions.size();
+                        }
+                        req = new HasPermissionsRequirement(permissions, minimum, invert);
+                    } else {
+                        DeluxeMenus.debug(
+                                DebugLevel.HIGHEST,
+                                Level.WARNING,
+                                "Has Permissions requirement at path: " + rPath + " does not contain permissions: entry"
                         );
                     }
                     break;

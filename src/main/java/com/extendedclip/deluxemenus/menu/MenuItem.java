@@ -14,12 +14,14 @@ import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.Registry;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Banner;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ArmorMeta;
 import org.bukkit.inventory.meta.BannerMeta;
@@ -259,6 +261,39 @@ public class MenuItem {
             itemMeta.setUnbreakable(true);
         }
 
+        if (VersionHelper.HAS_DATA_COMPONENTS) {
+            if (this.options.hideTooltip().isPresent()) {
+                String hideTooltip = holder.setPlaceholdersAndArguments(this.options.hideTooltip().get());
+                itemMeta.setHideTooltip(Boolean.parseBoolean(hideTooltip));
+            }
+            if (this.options.enchantmentGlintOverride().isPresent()) {
+                String enchantmentGlintOverride = holder.setPlaceholdersAndArguments(this.options.enchantmentGlintOverride().get());
+                itemMeta.setEnchantmentGlintOverride(Boolean.parseBoolean(enchantmentGlintOverride));
+            }
+            if (this.options.rarity().isPresent()) {
+                String rarity = holder.setPlaceholdersAndArguments(this.options.rarity().get());
+                try {
+                    itemMeta.setRarity(ItemRarity.valueOf(rarity.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    DeluxeMenus.debug(
+                            DebugLevel.HIGHEST,
+                            Level.WARNING,
+                            "Rarity " + rarity + " is not a valid!"
+                    );
+                }
+            }
+        }
+        if (VersionHelper.HAS_TOOLTIP_STYLE) {
+            if (this.options.tooltipStyle().isPresent()) {
+                NamespacedKey tooltipStyle = NamespacedKey.fromString(holder.setPlaceholdersAndArguments(this.options.tooltipStyle().get()));
+                if (tooltipStyle != null) itemMeta.setTooltipStyle(tooltipStyle);
+            }
+            if (this.options.itemModel().isPresent()) {
+                NamespacedKey itemModel = NamespacedKey.fromString(holder.setPlaceholdersAndArguments(this.options.itemModel().get()));
+                if (itemModel != null) itemMeta.setItemModel(itemModel);
+            }
+        }
+
         if (VersionHelper.HAS_ARMOR_TRIMS && ItemUtils.hasArmorMeta(itemStack)) {
             final Optional<String> trimMaterialName = this.options.trimMaterial();
             final Optional<String> trimPatternName = this.options.trimPattern();
@@ -413,6 +448,22 @@ public class MenuItem {
                 }
             }
 
+            if (this.options.nbtByte().isPresent()) {
+                final String tag = holder.setPlaceholdersAndArguments(this.options.nbtByte().get());
+                if (tag.contains(":")) {
+                    final String[] parts = tag.split(":");
+                    itemStack = NbtProvider.setByte(itemStack, parts[0], Byte.parseByte(parts[1]));
+                }
+            }
+
+            if (this.options.nbtShort().isPresent()) {
+                final String tag = holder.setPlaceholdersAndArguments(this.options.nbtShort().get());
+                if (tag.contains(":")) {
+                    final String[] parts = tag.split(":");
+                    itemStack = NbtProvider.setShort(itemStack, parts[0], Short.parseShort(parts[1]));
+                }
+            }
+
             if (this.options.nbtInt().isPresent()) {
                 final String tag = holder.setPlaceholdersAndArguments(this.options.nbtInt().get());
                 if (tag.contains(":")) {
@@ -426,6 +477,22 @@ public class MenuItem {
                 if (tag.contains(":")) {
                     final String[] parts = tag.split(":", 2);
                     itemStack = NbtProvider.setString(itemStack, parts[0], parts[1]);
+                }
+            }
+
+            for (String nbtTag : this.options.nbtBytes()) {
+                final String tag = holder.setPlaceholdersAndArguments(nbtTag);
+                if (tag.contains(":")) {
+                    final String[] parts = tag.split(":");
+                    itemStack = NbtProvider.setByte(itemStack, parts[0], Byte.parseByte(parts[1]));
+                }
+            }
+
+            for (String nbtTag : this.options.nbtShorts()) {
+                final String tag = holder.setPlaceholdersAndArguments(nbtTag);
+                if (tag.contains(":")) {
+                    final String[] parts = tag.split(":");
+                    itemStack = NbtProvider.setShort(itemStack, parts[0], Short.parseShort(parts[1]));
                 }
             }
 
