@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.gradleup.shadow") version("8.3.4")
+    id("com.gradleup.shadow") version("8.3.5")
     id("com.github.ben-manes.versions") version "0.51.0"
 }
 
