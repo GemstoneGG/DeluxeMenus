@@ -495,7 +495,7 @@ public class Menu extends Command {
         });
     }
 
-    private static void executeCommands(final @NotNull DeluxeMenus plugin, final @NotNull Player viewer, final List<String> commands, final MenuHolder holder) {
+    private static void executeCommands(final @NotNull DeluxeMenus plugin, final @NotNull Player viewer, final @NotNull List<String> commands, final @NotNull MenuHolder holder) {
         for (String command : commands) {
             ActionType type = ActionType.getByStart(command);
             if (type == null) continue;
