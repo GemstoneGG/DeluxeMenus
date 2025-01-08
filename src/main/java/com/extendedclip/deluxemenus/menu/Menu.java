@@ -1,11 +1,6 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
-import com.extendedclip.deluxemenus.action.ActionType;
-import com.extendedclip.deluxemenus.action.ClickAction;
-import com.extendedclip.deluxemenus.action.ClickActionTask;
-import com.extendedclip.deluxemenus.config.DeluxeMenusConfig;
-import com.extendedclip.deluxemenus.dupe.MenuItemMarker;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
@@ -15,8 +10,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import me.clip.placeholderapi.util.Msg;
 import org.bukkit.Bukkit;
@@ -38,14 +31,24 @@ public class Menu extends Command {
     private static final Map<UUID, Menu> lastOpenedMenus = new HashMap<>();
     private static CommandMap commandMap = null;
 
+    private final DeluxeMenus plugin;
     private final MenuOptions options;
     private final Map<Integer, TreeMap<Integer, MenuItem>> items;
+    // menu path starting from the plugin directory
+    private final String path;
 
-    public Menu(final @NotNull MenuOptions options, final @NotNull Map<Integer, TreeMap<Integer, MenuItem>> items) {
+    public Menu(
+            final @NotNull DeluxeMenus plugin,
+            final @NotNull MenuOptions options,
+            final @NotNull Map<Integer, TreeMap<Integer, MenuItem>> items,
+            final @NotNull String path
+    ) {
         super(options.commands().isEmpty() ? options.name() : options.commands().get(0));
 
+        this.plugin = plugin;
         this.options = options;
         this.items = items;
+        this.path = path;
 
         if (this.options.registerCommands()) {
             if (this.options.commands().size() > 1) {
@@ -57,10 +60,10 @@ public class Menu extends Command {
         menus.put(this.options.name(), this);
     }
 
-    public static void unload(final @NotNull String name) {
+    public static void unload(final @NotNull DeluxeMenus plugin, final @NotNull String name) {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (isInMenu(p, name)) {
-                closeMenu(p, true);
+                closeMenu(plugin, p, true);
             }
         }
 
@@ -73,10 +76,10 @@ public class Menu extends Command {
         menus.remove(name);
     }
 
-    public static void unload() {
+    public static void unload(final @NotNull DeluxeMenus plugin) {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (isInMenu(p)) {
-                closeMenu(p, true);
+                closeMenu(plugin, p, true);
             }
         }
         for (Menu menu : Menu.getAllMenus()) {
@@ -87,10 +90,10 @@ public class Menu extends Command {
         lastOpenedMenus.clear();
     }
 
-    public static void unloadForShutdown() {
+    public static void unloadForShutdown(final @NotNull DeluxeMenus plugin) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (isInMenu(player)) {
-                closeMenuForShutdown(player);
+                closeMenuForShutdown(plugin, player);
             }
         }
         menus.clear();
@@ -102,6 +105,25 @@ public class Menu extends Command {
 
     public static @NotNull Collection<Menu> getAllMenus() {
         return menus.values();
+    }
+
+    // Menus need to be stored in a list because config.yml can contain multiple menus.
+    // This can be changed once we remove support for menus inside the config file.
+    public static @NotNull TreeMap<String, List<Menu>> getPathSortedMenus() {
+        return menus.values().stream().map(m -> Map.entry(m.path(), m)).collect(
+                TreeMap::new, (tree, entry) -> {
+                    final List<Menu> list = tree.computeIfAbsent(entry.getKey(), k -> new ArrayList<>());
+                    list.add(entry.getValue());
+                    tree.put(entry.getKey(), list);
+                },
+                (tree1, tree2) -> {
+                    for (Entry<String, List<Menu>> entry : tree2.entrySet()) {
+                        final List<Menu> list = tree1.computeIfAbsent(entry.getKey(), k -> new ArrayList<>());
+                        list.addAll(entry.getValue());
+                        tree1.put(entry.getKey(), list);
+                    }
+                }
+        );
     }
 
     public static @NotNull Optional<Menu> getMenuByName(final @NotNull String name) {
@@ -136,12 +158,12 @@ public class Menu extends Command {
         return Optional.ofNullable(lastOpenedMenus.get(player.getUniqueId()));
     }
 
-    public static void cleanInventory(final @NotNull Player player, final @NotNull MenuItemMarker marker) {
+    public static void cleanInventory(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
         for (final ItemStack itemStack : player.getInventory().getContents()) {
             if (itemStack == null) continue;
-            if (!marker.isMarked(itemStack)) continue;
+            if (!plugin.getMenuItemMarker().isMarked(itemStack)) continue;
 
-            DeluxeMenus.debug(
+            plugin.debug(
                     DebugLevel.LOWEST,
                     Level.INFO,
                     "Found a DeluxeMenus item in a player's inventory. Removing it."
@@ -151,7 +173,7 @@ public class Menu extends Command {
         player.updateInventory();
     }
 
-    public static void closeMenu(final @NotNull Player player, final boolean close, final boolean executeCloseActions, final boolean runCloseCommmands) {
+    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close, final boolean executeCloseActions) {
         Optional<MenuHolder> optionalHolder = getMenuHolder(player);
         if (optionalHolder.isEmpty()) {
             return;
@@ -166,30 +188,24 @@ public class Menu extends Command {
         }
 
         if (close) {
-            Bukkit.getScheduler().runTask(DeluxeMenus.getInstance(), () -> {
+            Bukkit.getScheduler().runTask(plugin, () -> {
                 player.closeInventory();
-                cleanInventory(player, DeluxeMenus.getInstance().getMenuItemMarker());
+                cleanInventory(plugin, player);
             });
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
-
-        if (runCloseCommmands) {
-            holder.getMenu().map(Menu::options).map(MenuOptions::guiCloseCommands).ifPresent(commands -> {
-                executeCommands(player, commands, holder);
-            });
-        }
     }
 
-    public static void closeMenuForShutdown(final @NotNull Player player) {
+    public static void closeMenuForShutdown(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
         getMenuHolder(player).ifPresent(MenuHolder::stopPlaceholderUpdate);
 
         player.closeInventory();
-        cleanInventory(player, DeluxeMenus.getInstance().getMenuItemMarker());
+        cleanInventory(plugin, player);
     }
 
-    public static void closeMenu(final @NotNull Player player, final boolean close) {
-        closeMenu(player, close, true, true);
+    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close) {
+        closeMenu(plugin, player, close, false);
     }
 
     private void addCommand() {
@@ -199,7 +215,7 @@ public class Menu extends Command {
                 f.setAccessible(true);
                 commandMap = (CommandMap) f.get(Bukkit.getServer());
             } catch (final @NotNull Exception exception) {
-                DeluxeMenus.printStacktrace(
+                plugin.printStacktrace(
                         "Something went wrong while trying to register command: " + this.getName(),
                         exception
                 );
@@ -208,7 +224,7 @@ public class Menu extends Command {
         }
         boolean registered = commandMap.register("DeluxeMenus", this);
         if (registered) {
-            DeluxeMenus.debug(
+            plugin.debug(
                     DebugLevel.LOW,
                     Level.INFO,
                     "Registered command: " + this.getName() + " for menu: " + this.options.name()
@@ -230,20 +246,20 @@ public class Menu extends Command {
                 boolean unregistered = this.unregister((CommandMap) cMap.get(Bukkit.getServer()));
                 this.unregister(commandMap);
                 if (unregistered) {
-                    DeluxeMenus.debug(
+                    plugin.debug(
                             DebugLevel.HIGH,
                             Level.INFO,
                             "Successfully unregistered command: " + this.getName()
                     );
                 } else {
-                    DeluxeMenus.debug(
+                    plugin.debug(
                             DebugLevel.HIGHEST,
                             Level.WARNING,
                             "Failed to unregister command: " + this.getName()
                     );
                 }
             } catch (final @NotNull Exception exception) {
-                DeluxeMenus.printStacktrace(
+                plugin.printStacktrace(
                         "Something went wrong while trying to unregister command: " + this.getName(),
                         exception
                 );
@@ -261,7 +277,7 @@ public class Menu extends Command {
         Map<String, String> argMap = null;
 
         if (!this.options.arguments().isEmpty()) {
-            DeluxeMenus.debug(DebugLevel.LOWEST, Level.INFO, "has args");
+            plugin.debug(DebugLevel.LOWEST, Level.INFO, "has args");
             if (typedArgs.length < this.options.arguments().size()) {
                 if (this.options.argumentsUsageMessage().isPresent()) {
                     Msg.msg(sender, this.options.argumentsUsageMessage().get());
@@ -273,18 +289,18 @@ public class Menu extends Command {
             for (String arg : this.options.arguments()) {
                 if (index + 1 == this.options.arguments().size()) {
                     String last = String.join(" ", Arrays.asList(typedArgs).subList(index, typedArgs.length));
-                    DeluxeMenus.debug(DebugLevel.LOWEST, Level.INFO, "arg: " + arg + " => " + last);
+                    plugin.debug(DebugLevel.LOWEST, Level.INFO, "arg: " + arg + " => " + last);
                     argMap.put(arg, last);
                 } else {
                     argMap.put(arg, typedArgs[index]);
-                    DeluxeMenus.debug(DebugLevel.LOWEST, Level.INFO, "arg: " + arg + " => " + typedArgs[index]);
+                    plugin.debug(DebugLevel.LOWEST, Level.INFO, "arg: " + arg + " => " + typedArgs[index]);
                 }
                 index++;
             }
         }
 
         Player player = (Player) sender;
-        DeluxeMenus.debug(DebugLevel.LOWEST, Level.INFO, "opening menu: " + this.options.name());
+        plugin.debug(DebugLevel.LOWEST, Level.INFO, "opening menu: " + this.options.name());
         openMenu(player, argMap, null);
         return true;
     }
@@ -343,7 +359,7 @@ public class Menu extends Command {
             return;
         }
 
-        final MenuHolder holder = new MenuHolder(viewer);
+        final MenuHolder holder = new MenuHolder(plugin, viewer);
         if (placeholderPlayer != null) {
             holder.setPlaceholderPlayer(placeholderPlayer);
         }
@@ -359,7 +375,7 @@ public class Menu extends Command {
             return;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(DeluxeMenus.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 
             Set<MenuItem> activeItems = new HashSet<>();
 
@@ -370,7 +386,7 @@ public class Menu extends Command {
                     int slot = item.options().slot();
 
                     if (slot >= this.options.size()) {
-                        DeluxeMenus.debug(
+                        plugin.debug(
                                 DebugLevel.HIGHEST,
                                 Level.WARNING,
                                 "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the inventory size!",
@@ -425,12 +441,12 @@ public class Menu extends Command {
                     continue;
                 }
 
-                iStack = DeluxeMenus.getInstance().getMenuItemMarker().mark(iStack);
+                iStack = plugin.getMenuItemMarker().mark(iStack);
 
                 int slot = item.options().slot();
 
                 if (slot >= this.options.size()) {
-                    DeluxeMenus.debug(
+                    plugin.debug(
                             DebugLevel.HIGHEST,
                             Level.WARNING,
                             "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the inventory size!",
@@ -448,13 +464,9 @@ public class Menu extends Command {
 
             final boolean updatePlaceholders = update;
 
-            holder.getMenu().map(Menu::options).map(MenuOptions::guiOpenCommands).ifPresent(commands -> {
-                executeCommands(viewer, commands, holder);
-            });
-
-            Bukkit.getScheduler().runTask(DeluxeMenus.getInstance(), () -> {
+            Bukkit.getScheduler().runTask(plugin, () -> {
                 if (isInMenu(holder.getViewer())) {
-                    closeMenu(holder.getViewer(), false);
+                    closeMenu(plugin, holder.getViewer(), false);
                 }
 
                 viewer.openInventory(inventory);
@@ -467,49 +479,6 @@ public class Menu extends Command {
         });
     }
 
-    private static void executeCommands(Player viewer, List<String> commands, MenuHolder holder) {
-        for (String command : commands) {
-            ActionType type = ActionType.getByStart(command);
-            if (type == null) continue;
-
-            command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
-
-            ClickAction action = new ClickAction(type, command);
-
-            Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
-
-            if (d.find()) {
-                action.setDelay(d.group(1));
-                command = command.replaceFirst(Pattern.quote(d.group()), "");
-            }
-
-            Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
-
-            if (ch.find()) {
-                action.setChance(ch.group(1));
-                command = command.replaceFirst(Pattern.quote(ch.group()), "");
-            }
-
-            action.setExecutable(command);
-
-            final ClickActionTask actionTask = new ClickActionTask(
-                    DeluxeMenus.getInstance(),
-                    viewer.getUniqueId(),
-                    action.getType(),
-                    command,
-                    holder.getTypedArgs(),
-                    true,
-                    true
-            );
-
-            if (action.hasDelay()) {
-                actionTask.runTaskLater(DeluxeMenus.getInstance(), action.getDelay(holder));
-            } else {
-                actionTask.runTask(DeluxeMenus.getInstance());
-            }
-        }
-    }
-
     public @NotNull Map<Integer, TreeMap<Integer, MenuItem>> getMenuItems() {
         return this.items;
     }
@@ -520,5 +489,9 @@ public class Menu extends Command {
 
     public @NotNull MenuOptions options() {
         return this.options;
+    }
+
+    public @NotNull String path() {
+        return this.path;
     }
 }
