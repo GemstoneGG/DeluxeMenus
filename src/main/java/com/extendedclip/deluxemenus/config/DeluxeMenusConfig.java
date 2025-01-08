@@ -495,6 +495,26 @@ public class DeluxeMenusConfig {
         builder.argumentRequirements(argumentRequirements);
         builder.argumentsUsageMessage(c.getString(pre + "args_usage_message", null));
 
+        if (c.contains(pre + "gui_close_command")) {
+            final List<String> guiCloseCommands = new ArrayList<>();
+            if (c.isList(pre + "gui_close_command")) {
+                guiCloseCommands.addAll(c.getStringList(pre + "gui_close_command"));
+            } else {
+                guiCloseCommands.add(c.getString(pre + "gui_close_command"));
+            }
+            builder.guiCloseCommands(guiCloseCommands);
+        }
+
+        if (c.contains(pre + "gui_open_command")) {
+            final List<String> guiOpenCommands = new ArrayList<>();
+            if (c.isList(pre + "gui_open_command")) {
+                guiOpenCommands.addAll(c.getStringList(pre + "gui_open_command"));
+            } else {
+                guiOpenCommands.add(c.getString(pre + "gui_open_command"));
+            }
+            builder.guiOpenCommands(guiOpenCommands);
+        }
+
         int size = 54;
         if (type == InventoryType.CHEST) {
             if (!c.contains(pre + "size")) {

@@ -1,6 +1,10 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
+import com.extendedclip.deluxemenus.action.ActionType;
+import com.extendedclip.deluxemenus.action.ClickAction;
+import com.extendedclip.deluxemenus.action.ClickActionTask;
+import com.extendedclip.deluxemenus.config.DeluxeMenusConfig;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
@@ -10,6 +14,8 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import me.clip.placeholderapi.util.Msg;
 import org.bukkit.Bukkit;
@@ -173,7 +179,7 @@ public class Menu extends Command {
         player.updateInventory();
     }
 
-    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close, final boolean executeCloseActions) {
+    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close, final boolean executeCloseActions, final boolean runCloseCommmands) {
         Optional<MenuHolder> optionalHolder = getMenuHolder(player);
         if (optionalHolder.isEmpty()) {
             return;
@@ -195,6 +201,12 @@ public class Menu extends Command {
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
+
+        if (runCloseCommmands) {
+            holder.getMenu().map(Menu::options).map(MenuOptions::guiCloseCommands).ifPresent(commands -> {
+                executeCommands(plugin, player, commands, holder);
+            });
+        }
     }
 
     public static void closeMenuForShutdown(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
@@ -205,7 +217,7 @@ public class Menu extends Command {
     }
 
     public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close) {
-        closeMenu(plugin, player, close, false);
+        closeMenu(plugin, player, close, true, true);
     }
 
     private void addCommand() {
@@ -464,6 +476,10 @@ public class Menu extends Command {
 
             final boolean updatePlaceholders = update;
 
+            holder.getMenu().map(Menu::options).map(MenuOptions::guiOpenCommands).ifPresent(commands -> {
+                executeCommands(plugin, viewer, commands, holder);
+            });
+
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (isInMenu(holder.getViewer())) {
                     closeMenu(plugin, holder.getViewer(), false);
@@ -477,6 +493,49 @@ public class Menu extends Command {
                 }
             });
         });
+    }
+
+    private static void executeCommands(final DeluxeMenus plugin, Player viewer, List<String> commands, MenuHolder holder) {
+        for (String command : commands) {
+            ActionType type = ActionType.getByStart(command);
+            if (type == null) continue;
+
+            command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
+
+            ClickAction action = new ClickAction(type, command);
+
+            Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
+
+            if (d.find()) {
+                action.setDelay(d.group(1));
+                command = command.replaceFirst(Pattern.quote(d.group()), "");
+            }
+
+            Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
+
+            if (ch.find()) {
+                action.setChance(ch.group(1));
+                command = command.replaceFirst(Pattern.quote(ch.group()), "");
+            }
+
+            action.setExecutable(command);
+
+            final ClickActionTask actionTask = new ClickActionTask(
+                    plugin,
+                    viewer.getUniqueId(),
+                    action.getType(),
+                    command,
+                    holder.getTypedArgs(),
+                    true,
+                    true
+            );
+
+            if (action.hasDelay()) {
+                actionTask.runTaskLater(plugin, action.getDelay(holder));
+            } else {
+                actionTask.runTask(plugin);
+            }
+        }
     }
 
     public @NotNull Map<Integer, TreeMap<Integer, MenuItem>> getMenuItems() {

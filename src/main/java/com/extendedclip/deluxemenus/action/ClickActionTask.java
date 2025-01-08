@@ -127,7 +127,7 @@ public class ClickActionTask extends BukkitRunnable {
                 break;
 
             case CLOSE:
-                Menu.closeMenu(plugin, player, true, true);
+                Menu.closeMenu(plugin, player, true, true, false);
                 break;
 
             case OPEN_GUI_MENU:
@@ -354,32 +354,16 @@ public class ClickActionTask extends BukkitRunnable {
             case BROADCAST_SOUND:
             case BROADCAST_WORLD_SOUND:
             case PLAY_SOUND:
-                final Sound sound;
+                String sound;
                 float volume = 1;
                 float pitch = 1;
 
                 if (!executable.contains(" ")) {
-                    try {
-                        sound = Sound.valueOf(executable.toUpperCase());
-                    } catch (final IllegalArgumentException exception) {
-                        plugin.printStacktrace(
-                                "Sound name given for sound action: " + executable + ", is not a valid sound!",
-                                exception
-                        );
-                        break;
-                    }
+                    sound = executable;
                 } else {
                     String[] parts = executable.split(" ", 3);
 
-                    try {
-                        sound = Sound.valueOf(parts[0].toUpperCase());
-                    } catch (final IllegalArgumentException exception) {
-                        plugin.printStacktrace(
-                                "Sound name given for sound action: " + parts[0] + ", is not a valid sound!",
-                                exception
-                        );
-                        break;
-                    }
+                    sound = parts[0];
 
                     if (parts.length == 3) {
                         try {
@@ -414,6 +398,8 @@ public class ClickActionTask extends BukkitRunnable {
                         );
                     }
                 }
+
+                sound = sound.toLowerCase().replace("_", ".");
 
                 switch (actionType) {
                     case BROADCAST_SOUND:
