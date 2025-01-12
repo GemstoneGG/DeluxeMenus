@@ -45,7 +45,6 @@ public class Menu {
             final @NotNull Map<Integer, TreeMap<Integer, MenuItem>> items,
             final @NotNull String path
     ) {
-
         this.plugin = plugin;
         this.options = options;
         this.items = items;
