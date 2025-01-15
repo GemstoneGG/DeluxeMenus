@@ -6,6 +6,7 @@ import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.utils.AdventureUtils;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.extendedclip.deluxemenus.utils.ExpUtils;
+import com.extendedclip.deluxemenus.utils.SoundUtils;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 import com.extendedclip.deluxemenus.utils.VersionHelper;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -127,7 +128,7 @@ public class ClickActionTask extends BukkitRunnable {
                 break;
 
             case CLOSE:
-                Menu.closeMenu(plugin, player, true, true, false);
+                Menu.closeMenu(plugin, player, true, true);
                 break;
 
             case OPEN_GUI_MENU:
@@ -354,16 +355,32 @@ public class ClickActionTask extends BukkitRunnable {
             case BROADCAST_SOUND:
             case BROADCAST_WORLD_SOUND:
             case PLAY_SOUND:
-                String sound;
+                final Sound sound;
                 float volume = 1;
                 float pitch = 1;
 
                 if (!executable.contains(" ")) {
-                    sound = executable;
+                    try {
+                        sound = SoundUtils.getSound(executable.toUpperCase());
+                    } catch (final IllegalArgumentException exception) {
+                        plugin.printStacktrace(
+                                "Sound name given for sound action: " + executable + ", is not a valid sound!",
+                                exception
+                        );
+                        break;
+                    }
                 } else {
                     String[] parts = executable.split(" ", 3);
 
-                    sound = parts[0];
+                    try {
+                        sound = SoundUtils.getSound(parts[0].toUpperCase());
+                    } catch (final IllegalArgumentException exception) {
+                        plugin.printStacktrace(
+                                "Sound name given for sound action: " + parts[0] + ", is not a valid sound!",
+                                exception
+                        );
+                        break;
+                    }
 
                     if (parts.length == 3) {
                         try {
@@ -398,8 +415,6 @@ public class ClickActionTask extends BukkitRunnable {
                         );
                     }
                 }
-
-                sound = sound.toLowerCase().replace("_", ".");
 
                 switch (actionType) {
                     case BROADCAST_SOUND:
