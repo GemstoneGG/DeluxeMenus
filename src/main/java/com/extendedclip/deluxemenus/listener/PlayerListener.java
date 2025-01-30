@@ -35,7 +35,7 @@ public class PlayerListener extends Listener {
         super(plugin);
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandExecute(PlayerCommandPreprocessEvent event) {
 
         final String cmd = event.getMessage().substring(1);
