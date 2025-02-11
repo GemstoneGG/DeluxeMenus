@@ -1,7 +1,8 @@
-api-version: 1.13
 name: DeluxeMenus
 main: com.extendedclip.deluxemenus.DeluxeMenus
+api-version: 1.13
 version: ${version}
+folia-supported: true
 authors: [ HelpChat ]
 softdepend: [ PlaceholderAPI, Vault, HeadDatabase, ItemsAdder, Oraxen, ExecutableItems, ExecutableBlocks, Score ]
 description: All in one inventory menu system

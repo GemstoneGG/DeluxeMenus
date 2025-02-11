@@ -1223,11 +1223,11 @@ public class DeluxeMenusConfig {
                         final ClickActionTask actionTask = new ClickActionTask(plugin, holder.getViewer().getUniqueId(), action.getType(), action.getExecutable(), holder.getTypedArgs(), holder.parsePlaceholdersInArguments(), holder.parsePlaceholdersAfterArguments());
 
                         if (action.hasDelay()) {
-                            actionTask.runTaskLater(plugin, action.getDelay(holder));
+                            actionTask.runDelayed(plugin, action.getDelay(holder));
                             continue;
                         }
 
-                        actionTask.runTask(plugin);
+                        actionTask.run(plugin);
                     }
                 }
             };

@@ -11,8 +11,17 @@ import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -196,10 +205,10 @@ public class Menu {
         }
 
         if (close) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            player.getScheduler().run(plugin, (task) -> {
                 player.closeInventory();
                 cleanInventory(plugin, player);
-            });
+            }, null);
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
@@ -292,7 +301,7 @@ public class Menu {
             return;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
 
             Set<MenuItem> activeItems = new HashSet<>();
 
@@ -385,7 +394,7 @@ public class Menu {
                 executeCommands(plugin, viewer, commands, holder);
             });
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            holder.getViewer().getScheduler().run(plugin, (task1) -> {
                 if (isInMenu(holder.getViewer())) {
                     closeMenu(plugin, holder.getViewer(), false);
                 }
@@ -396,7 +405,7 @@ public class Menu {
                 if (updatePlaceholders) {
                     holder.startUpdatePlaceholdersTask();
                 }
-            });
+            }, null);
         });
     }
 
@@ -436,9 +445,9 @@ public class Menu {
             );
 
             if (action.hasDelay()) {
-                actionTask.runTaskLater(plugin, action.getDelay(holder));
+                actionTask.runDelayed(plugin, action.getDelay(holder));
             } else {
-                actionTask.runTask(plugin);
+                actionTask.run(plugin);
             }
         }
     }

@@ -14,6 +14,7 @@ version = "$majorVersion-$minorVersion"
 
 repositories {
     mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.glaremasters.me/repository/public/")
@@ -52,8 +53,8 @@ tasks {
         archiveFileName.set("DeluxeMenus-${rootProject.version}.jar")
     }
     java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     processResources {

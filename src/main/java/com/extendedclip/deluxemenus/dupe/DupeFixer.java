@@ -55,9 +55,9 @@ public class DupeFixer extends Listener {
 
     @EventHandler
     private void onLogin(@NotNull final PlayerLoginEvent event) {
-        plugin.getServer().getScheduler().runTaskLater(
+        event.getPlayer().getScheduler().runDelayed(
                 plugin,
-                () -> {
+                (t) -> {
                     for (final ItemStack itemStack : event.getPlayer().getInventory().getContents()) {
                         if (itemStack == null) continue;
                         if (!marker.isMarked(itemStack)) continue;
@@ -69,7 +69,7 @@ public class DupeFixer extends Listener {
                         );
                         event.getPlayer().getInventory().remove(itemStack);
                     }},
-                10L
+                null, 10L
         );
     }
 }
