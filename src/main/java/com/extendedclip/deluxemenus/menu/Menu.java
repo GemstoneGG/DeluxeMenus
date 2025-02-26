@@ -301,7 +301,8 @@ public class Menu {
             return;
         }
 
-        Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
+
+        plugin.getScheduler().runTaskAtLocation(viewer.getLocation(), () -> {
 
             Set<MenuItem> activeItems = new HashSet<>();
 
