@@ -11,12 +11,23 @@ import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.projectunified.minelib.scheduler.async.AsyncScheduler;
+import io.github.projectunified.minelib.scheduler.global.GlobalScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -196,7 +207,7 @@ public class Menu {
         }
 
         if (close) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            GlobalScheduler.get(DeluxeMenus.getInstance()).run(() -> {
                 player.closeInventory();
                 cleanInventory(plugin, player);
             });
@@ -292,7 +303,7 @@ public class Menu {
             return;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        AsyncScheduler.get(DeluxeMenus.getInstance()).run(() -> {
 
             Set<MenuItem> activeItems = new HashSet<>();
 
@@ -385,7 +396,7 @@ public class Menu {
                 executeCommands(plugin, viewer, commands, holder);
             });
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            GlobalScheduler.get(DeluxeMenus.getInstance()).run(() -> {
                 if (isInMenu(holder.getViewer())) {
                     closeMenu(plugin, holder.getViewer(), false);
                 }

@@ -20,6 +20,7 @@ import com.extendedclip.deluxemenus.utils.Messages;
 import com.extendedclip.deluxemenus.utils.VersionHelper;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import io.github.projectunified.minelib.scheduler.canceller.TaskCanceller;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -44,6 +45,8 @@ public class DeluxeMenus extends JavaPlugin {
 
     public static final Map<String, Material> MATERIALS = Arrays.stream(Material.values()).collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
 
+    private static DeluxeMenus instance;
+
     private static final DebugLevel STACKTRACE_PRINT_LEVEL = DebugLevel.MEDIUM;
 
     private PersistentMetaHandler persistentMetaHandler;
@@ -59,8 +62,13 @@ public class DeluxeMenus extends JavaPlugin {
     private final GeneralConfig generalConfig = new GeneralConfig(this);
     private DeluxeMenusConfig menuConfig;
 
+    public static DeluxeMenus getInstance() {
+        return instance;
+    }
+
     @Override
     public void onLoad() {
+        instance = this;
         if (NbtProvider.isAvailable()) {
             this.debug(DebugLevel.HIGHEST, Level.INFO, "NMS hook has been setup successfully!");
             return;
@@ -109,7 +117,7 @@ public class DeluxeMenus extends JavaPlugin {
     public void onDisable() {
         Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "BungeeCord");
 
-        Bukkit.getScheduler().cancelTasks(this);
+        TaskCanceller.get(this).cancelAll();
 
         if (this.audiences != null) {
             this.audiences.close();
