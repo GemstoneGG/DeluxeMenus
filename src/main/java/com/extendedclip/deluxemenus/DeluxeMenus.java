@@ -20,6 +20,7 @@ import com.extendedclip.deluxemenus.utils.Messages;
 import com.extendedclip.deluxemenus.utils.VersionHelper;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import me.nahu.scheduler.wrapper.FoliaWrappedJavaPlugin;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -40,7 +41,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class DeluxeMenus extends JavaPlugin {
+public class DeluxeMenus extends FoliaWrappedJavaPlugin {
 
     public static final Map<String, Material> MATERIALS = Arrays.stream(Material.values()).collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
 
