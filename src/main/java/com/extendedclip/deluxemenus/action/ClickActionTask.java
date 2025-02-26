@@ -9,12 +9,12 @@ import com.extendedclip.deluxemenus.utils.ExpUtils;
 import com.extendedclip.deluxemenus.utils.SoundUtils;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 import com.extendedclip.deluxemenus.utils.VersionHelper;
+import com.extendedclip.deluxemenus.utils.schedulers.FoliaRunnable;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class ClickActionTask extends BukkitRunnable {
+public class ClickActionTask extends FoliaRunnable {
 
     private final DeluxeMenus plugin;
     private final UUID uuid;
@@ -45,6 +45,7 @@ public class ClickActionTask extends BukkitRunnable {
             final boolean parsePlaceholdersInArguments,
             final boolean parsePlaceholdersAfterArguments
     ) {
+        super(Bukkit.getGlobalRegionScheduler());
         this.plugin = plugin;
         this.uuid = uuid;
         this.actionType = actionType;
@@ -59,7 +60,7 @@ public class ClickActionTask extends BukkitRunnable {
         final Player player = Bukkit.getPlayer(this.uuid);
         if (player == null) {
             return;
-        }
+        } player.getScheduler().run(plugin, scheduledTask -> {
 
         final Optional<MenuHolder> holder = Menu.getMenuHolder(player);
         final Player target = holder.isPresent() && holder.get().getPlaceholderPlayer() != null
@@ -108,7 +109,7 @@ public class ClickActionTask extends BukkitRunnable {
                 break;
 
             case CONSOLE:
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), executable);
+                Bukkit.getGlobalRegionScheduler().execute(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), executable));
                 break;
 
             case MINI_MESSAGE:
@@ -437,6 +438,6 @@ public class ClickActionTask extends BukkitRunnable {
 
             default:
                 break;
-        }
+        }}, null);
     }
 }

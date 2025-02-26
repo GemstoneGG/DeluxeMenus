@@ -8,7 +8,6 @@ import com.extendedclip.deluxemenus.menu.MenuItem;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -93,10 +92,10 @@ public class PlayerListener extends Listener {
 
         if (Menu.isInMenu(player)) {
             Menu.closeMenu(plugin, player, false);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            player.getScheduler().runDelayed(plugin, (task) -> {
                 Menu.cleanInventory(plugin, player);
                 player.updateInventory();
-            }, 3L);
+            }, null, 3L);
         }
     }
 

@@ -47,7 +47,7 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
 
         ItemStack mmoItem = null;
         try {
-            mmoItem = Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+            mmoItem = callSyncMethod(() -> {
                 ItemStack item = MMOItems.plugin.getItem(itemType, splitArgs[1]);
 
                 if (item == null) {
@@ -83,5 +83,17 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
     @Override
     public void clearCache() {
         cache.clear();
+    }
+
+    private <T> java.util.concurrent.Future<T> callSyncMethod(final java.util.concurrent.Callable<T> task) {
+        java.util.concurrent.CompletableFuture<T> completableFuture = new java.util.concurrent.CompletableFuture<>();
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+            try {
+                completableFuture.complete(task.call());
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+        });
+        return completableFuture;
     }
 }

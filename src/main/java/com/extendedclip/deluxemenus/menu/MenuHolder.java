@@ -9,8 +9,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -29,7 +27,7 @@ public class MenuHolder implements InventoryHolder {
     private Player placeholderPlayer;
     private String menuName;
     private Set<MenuItem> activeItems;
-    private BukkitTask updateTask = null;
+    private io.papermc.paper.threadedregions.scheduler.ScheduledTask updateTask = null;
     private Inventory inventory;
     private boolean updating;
     private boolean parsePlaceholdersInArguments;
@@ -54,7 +52,7 @@ public class MenuHolder implements InventoryHolder {
         return viewer.getName();
     }
 
-    public BukkitTask getUpdateTask() {
+    public io.papermc.paper.threadedregions.scheduler.ScheduledTask getUpdateTask() {
         return updateTask;
     }
 
@@ -139,7 +137,7 @@ public class MenuHolder implements InventoryHolder {
 
         stopPlaceholderUpdate();
 
-        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+        Bukkit.getAsyncScheduler().runNow(this.plugin, (task) -> {
 
             final Set<MenuItem> active = new HashSet<>();
 
@@ -177,7 +175,7 @@ public class MenuHolder implements InventoryHolder {
                 Menu.closeMenu(plugin, getViewer(), true);
             }
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            getViewer().getScheduler().run(plugin, (task1) -> {
 
                 boolean update = false;
 
@@ -205,7 +203,7 @@ public class MenuHolder implements InventoryHolder {
                 }
 
                 setUpdating(false);
-            });
+            }, null);
         });
     }
 
@@ -225,7 +223,7 @@ public class MenuHolder implements InventoryHolder {
             stopPlaceholderUpdate();
         }
 
-        updateTask = new BukkitRunnable() {
+        updateTask = new com.extendedclip.deluxemenus.utils.schedulers.FoliaRunnable(Bukkit.getAsyncScheduler(), java.util.concurrent.TimeUnit.MILLISECONDS) {
 
             @Override
             public void run() {
@@ -290,11 +288,11 @@ public class MenuHolder implements InventoryHolder {
                 }
             }
 
-        }.runTaskTimerAsynchronously(plugin, 20L,
+        }.runAtFixedRate(plugin, 20L * 50,
                 20L * Menu.getMenuByName(menuName)
                         .map(Menu::options)
                         .map(MenuOptions::updateInterval)
-                        .orElse(10));
+                        .orElse(10) * 50);
     }
 
     public boolean isUpdating() {
