@@ -3,6 +3,8 @@ package com.extendedclip.deluxemenus.menu;
 import com.extendedclip.deluxemenus.DeluxeMenus;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.utils.StringUtils;
+import com.extendedclip.deluxemenus.utils.schedulers.FoliaRunnable;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 public class MenuHolder implements InventoryHolder {
 
@@ -27,7 +30,7 @@ public class MenuHolder implements InventoryHolder {
     private Player placeholderPlayer;
     private String menuName;
     private Set<MenuItem> activeItems;
-    private io.papermc.paper.threadedregions.scheduler.ScheduledTask updateTask = null;
+    private ScheduledTask updateTask = null;
     private Inventory inventory;
     private boolean updating;
     private boolean parsePlaceholdersInArguments;
@@ -52,7 +55,7 @@ public class MenuHolder implements InventoryHolder {
         return viewer.getName();
     }
 
-    public io.papermc.paper.threadedregions.scheduler.ScheduledTask getUpdateTask() {
+    public ScheduledTask getUpdateTask() {
         return updateTask;
     }
 
@@ -223,7 +226,7 @@ public class MenuHolder implements InventoryHolder {
             stopPlaceholderUpdate();
         }
 
-        updateTask = new com.extendedclip.deluxemenus.utils.schedulers.FoliaRunnable(Bukkit.getAsyncScheduler(), java.util.concurrent.TimeUnit.MILLISECONDS) {
+        updateTask = new FoliaRunnable(Bukkit.getAsyncScheduler(), TimeUnit.MILLISECONDS) {
 
             @Override
             public void run() {
