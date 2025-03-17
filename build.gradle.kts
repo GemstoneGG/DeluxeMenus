@@ -42,7 +42,6 @@ dependencies {
     implementation(libs.nashorn)
     implementation(libs.adventure.platform)
     implementation(libs.adventure.minimessage)
-    implementation(libs.folialib)
 
     compileOnly("org.jetbrains:annotations:23.0.0")
 }
