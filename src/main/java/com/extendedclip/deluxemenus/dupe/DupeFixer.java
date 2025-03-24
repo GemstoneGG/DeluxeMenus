@@ -4,10 +4,8 @@ import com.extendedclip.deluxemenus.DeluxeMenus;
 import com.extendedclip.deluxemenus.listener.Listener;
 import com.extendedclip.deluxemenus.nbt.NbtProvider;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.inventory.ItemStack;
@@ -76,45 +74,6 @@ public class DupeFixer extends Listener {
                     }},
                 null, 10L
         );
-    }
-
-    @EventHandler
-    private void onInventoryClose(@NotNull final InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
-
-        player.getScheduler().runDelayed(plugin, task -> {
-            boolean removed = false;
-
-            for (ItemStack itemStack : player.getInventory().getContents()) {
-                if (itemStack == null) continue;
-                if (!marker.isMarked(itemStack) || !isDupeProtectionFlagged(itemStack)) continue;
-
-                player.getInventory().remove(itemStack);
-                removed = true;
-
-                plugin.debug(
-                        DebugLevel.LOWEST,
-                        Level.INFO,
-                        "DeluxeMenus item found in main inventory on close. Removing it."
-                );
-            }
-
-            ItemStack offhand = player.getInventory().getItemInOffHand();
-            if (marker.isMarked(offhand) && isDupeProtectionFlagged(offhand)) {
-                player.getInventory().setItemInOffHand(null);
-                removed = true;
-
-                plugin.debug(
-                        DebugLevel.LOWEST,
-                        Level.INFO,
-                        "DeluxeMenus item found in offhand on close. Removing it."
-                );
-            }
-
-            if (removed) {
-                player.updateInventory();
-            }
-        }, null, 1L);
     }
 
     private boolean isDupeProtectionFlagged(ItemStack itemStack) {

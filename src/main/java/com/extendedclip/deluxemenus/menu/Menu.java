@@ -372,6 +372,7 @@ public class Menu {
                 }
 
                 iStack = plugin.getMenuItemMarker().mark(iStack);
+                plugin.markDupeProtection(iStack);
 
                 int slot = item.options().slot();
 
@@ -389,7 +390,7 @@ public class Menu {
                     update = true;
                 }
 
-                inventory.setItem(item.options().slot(), iStack);
+                inventory.setItem(slot, iStack);
             }
 
             final boolean updatePlaceholders = update;

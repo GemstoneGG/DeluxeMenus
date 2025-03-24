@@ -6,6 +6,7 @@ import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
+import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.bukkit.entity.Player;
@@ -17,11 +18,13 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class PlayerListener extends Listener {
 
@@ -83,20 +86,48 @@ public class PlayerListener extends Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-
-        if (!(event.getPlayer() instanceof Player)) {
-            return;
-        }
-
-        final Player player = (Player) event.getPlayer();
+        if (!(event.getPlayer() instanceof Player player)) return;
 
         if (Menu.isInMenu(player)) {
             Menu.closeMenu(plugin, player, false);
-            player.getScheduler().runDelayed(plugin, (task) -> {
-                Menu.cleanInventory(plugin, player);
-                player.updateInventory();
-            }, null, 3L);
         }
+
+        player.getScheduler().runDelayed(plugin, (task) -> {
+            Menu.cleanInventory(plugin, player);
+
+            boolean removed = false;
+
+            for (ItemStack itemStack : player.getInventory().getContents()) {
+                if (itemStack == null) continue;
+                if (!plugin.getMenuItemMarker().isMarked(itemStack)) continue;
+                if (!plugin.isDupeProtectionFlagged(itemStack)) continue;
+
+                player.getInventory().remove(itemStack);
+                removed = true;
+
+                plugin.debug(
+                        DebugLevel.LOWEST,
+                        Level.INFO,
+                        "DeluxeMenus item found in main inventory on close. Removing it."
+                );
+            }
+
+            ItemStack offhand = player.getInventory().getItemInOffHand();
+            if (plugin.getMenuItemMarker().isMarked(offhand) && plugin.isDupeProtectionFlagged(offhand)) {
+                player.getInventory().setItemInOffHand(null);
+                removed = true;
+
+                plugin.debug(
+                        DebugLevel.LOWEST,
+                        Level.INFO,
+                        "DeluxeMenus item found in offhand on close. Removing it."
+                );
+            }
+
+            if (removed) {
+                player.updateInventory();
+            }
+        }, null, 1L);
     }
 
     @EventHandler(priority = EventPriority.LOW)

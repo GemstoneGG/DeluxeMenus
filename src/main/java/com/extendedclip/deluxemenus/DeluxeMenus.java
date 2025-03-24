@@ -24,10 +24,13 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -312,5 +315,24 @@ public class DeluxeMenus extends JavaPlugin {
 
     private void setUpMetrics() {
         final Metrics metrics = new Metrics(this, 445);
+    }
+
+    public boolean isDupeProtectionFlagged(@NotNull ItemStack item) {
+        if (!item.hasItemMeta()) return false;
+
+        return item.getItemMeta().getPersistentDataContainer()
+                .has(new NamespacedKey(this, "deluxemenus.item.dupeprotection"), PersistentDataType.BYTE);
+    }
+
+    public void markDupeProtection(@NotNull ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        meta.getPersistentDataContainer().set(
+                new NamespacedKey(this, "deluxemenus.item.dupeprotection"),
+                PersistentDataType.BYTE,
+                (byte) 1
+        );
+        item.setItemMeta(meta);
     }
 }
