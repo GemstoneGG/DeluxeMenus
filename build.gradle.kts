@@ -51,7 +51,6 @@ tasks {
         relocate("org.objectweb.asm", "com.extendedclip.deluxemenus.libs.asm")
         relocate("org.openjdk.nashorn", "com.extendedclip.deluxemenus.libs.nashorn")
         relocate("net.kyori", "com.extendedclip.deluxemenus.libs.adventure")
-        relocate("me.nahu.scheduler", "com.extendedclip.deluxemenus.libs.folialib")
         archiveFileName.set("DeluxeMenus-${rootProject.version}.jar")
     }
     java {
