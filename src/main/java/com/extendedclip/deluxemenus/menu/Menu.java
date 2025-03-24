@@ -37,9 +37,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class Menu {
 
-    private static final Map<String, Menu> menus = new HashMap<>();
+    private static final Map<String, Menu> menus = new ConcurrentHashMap<>();
     private static final Set<MenuHolder> menuHolders = ConcurrentHashMap.newKeySet();
-    private static final Map<UUID, Menu> lastOpenedMenus = new HashMap<>();
+    private static final Map<UUID, Menu> lastOpenedMenus = new ConcurrentHashMap<>();
 
     private final DeluxeMenus plugin;
     private final MenuOptions options;
