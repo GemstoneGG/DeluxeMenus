@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
 public class Menu {
 
     private static final Map<String, Menu> menus = new HashMap<>();
-    private static final Set<MenuHolder> menuHolders = new HashSet<>();
+    private static final Set<MenuHolder> menuHolders = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, Menu> lastOpenedMenus = new HashMap<>();
 
     private final DeluxeMenus plugin;
