@@ -57,7 +57,7 @@ public class DeluxeMenusCommand implements TabExecutor {
             final @NotNull CommandSender sender,
             final @NotNull Command command,
             final @NotNull String label,
-            final @NotNull String[] args
+            final @NotNull String @NotNull [] args
     ) {
         final List<String> arguments = Arrays.asList(args);
 
