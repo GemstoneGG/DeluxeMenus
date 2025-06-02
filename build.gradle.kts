@@ -5,7 +5,7 @@ plugins {
 }
 
 // Change to true when releasing
-val release = false
+val release = true
 val majorVersion = "1.14.2"
 val minorVersion = if (release) "Release" else "DEV-" + System.getenv("FOLIA")
 
