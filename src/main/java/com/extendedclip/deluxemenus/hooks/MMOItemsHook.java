@@ -4,8 +4,11 @@ import com.extendedclip.deluxemenus.DeluxeMenus;
 import com.extendedclip.deluxemenus.cache.SimpleCache;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import net.Indyuce.mmoitems.MMOItems;
@@ -85,8 +88,8 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
         cache.clear();
     }
 
-    private <T> java.util.concurrent.Future<T> callSyncMethod(final java.util.concurrent.Callable<T> task) {
-        java.util.concurrent.CompletableFuture<T> completableFuture = new java.util.concurrent.CompletableFuture<>();
+    private <T> Future<T> callSyncMethod(final Callable<T> task) {
+        CompletableFuture<T> completableFuture = new CompletableFuture<>();
         Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
             try {
                 completableFuture.complete(task.call());
