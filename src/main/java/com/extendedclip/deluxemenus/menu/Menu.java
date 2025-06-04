@@ -61,7 +61,7 @@ public class Menu {
 
         if (this.options.registerCommands()) {
             this.command = new RegistrableMenuCommand(plugin, this);
-            this.command.register();
+            Bukkit.getGlobalRegionScheduler().execute(plugin, () -> this.command.register());
         }
 
         menus.put(this.options.name(), this);
