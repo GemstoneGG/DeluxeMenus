@@ -201,7 +201,7 @@ public class MenuHolder implements InventoryHolder {
 
                 if (update && updateTask == null) {
                     startUpdatePlaceholdersTask();
-                } else if(!update && updateTask != null) {
+                } else if (!update && updateTask != null) {
                     stopPlaceholderUpdate();
                 }
 
@@ -221,7 +221,7 @@ public class MenuHolder implements InventoryHolder {
     }
 
     public void stopRefreshTask() {
-        if(refreshTask != null) {
+        if (refreshTask != null) {
             try {
                 refreshTask.cancel();
             } catch (Exception ignored) {
@@ -231,7 +231,7 @@ public class MenuHolder implements InventoryHolder {
     }
 
     public void startRefreshTask() {
-        if(refreshTask != null) {
+        if (refreshTask != null) {
             stopRefreshTask();
         }
 
