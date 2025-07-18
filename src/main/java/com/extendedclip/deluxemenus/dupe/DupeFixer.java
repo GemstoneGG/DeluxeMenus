@@ -7,7 +7,7 @@ import com.extendedclip.deluxemenus.utils.DebugLevel;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +57,7 @@ public class DupeFixer extends Listener {
     }
 
     @EventHandler
-    private void onLogin(@NotNull final PlayerLoginEvent event) {
+    private void onLogin(@NotNull final PlayerJoinEvent event) {
         plugin.getServer().getScheduler().runTaskLater(
                 plugin,
                 task -> {
