@@ -89,6 +89,7 @@ public class MenuItem {
             return null;
         }
     }
+
     public ItemStack getItemStack(@NotNull final MenuHolder holder) {
         final Player viewer = holder.getViewer();
 
@@ -111,7 +112,6 @@ public class MenuItem {
                 lowercaseStringMaterial = itemStack.getType().toString().toLowerCase(Locale.ENGLISH);
             }
         }
-
 
         if (ItemUtils.isPlayerItem(lowercaseStringMaterial)) {
             final ItemStack playerItem = INVENTORY_ITEM_ACCESSORS.get(lowercaseStringMaterial).apply(viewer.getInventory());
