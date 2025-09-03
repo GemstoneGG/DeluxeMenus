@@ -540,6 +540,10 @@ public class MenuItem {
                     itemStack = NbtProvider.setInt(itemStack, parts[0], Integer.parseInt(parts[1]));
                 }
             }
+
+            if (NbtProvider.isAvailable()) {
+                itemStack = NbtProvider.setString(itemStack, "deluxemenus.item.dupeprotection", "true");
+            }
         }
 
         return itemStack;

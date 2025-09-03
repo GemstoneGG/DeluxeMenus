@@ -30,10 +30,13 @@ import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -361,5 +364,24 @@ public class DeluxeMenus extends JavaPlugin {
             results.put("Model Data", options.stream().filter(option -> option.customModelData().isPresent()).mapToInt(c -> 1).sum());
             return results;
         }));
+    }
+
+    public boolean isDupeProtectionFlagged(@NotNull ItemStack item) {
+        if (!item.hasItemMeta()) return false;
+
+        return item.getItemMeta().getPersistentDataContainer()
+                .has(new NamespacedKey(this, "deluxemenus.item.dupeprotection"), PersistentDataType.BYTE);
+    }
+
+    public void markDupeProtection(@NotNull ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        meta.getPersistentDataContainer().set(
+                new NamespacedKey(this, "deluxemenus.item.dupeprotection"),
+                PersistentDataType.BYTE,
+                (byte) 1
+        );
+        item.setItemMeta(meta);
     }
 }

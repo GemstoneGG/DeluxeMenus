@@ -1,6 +1,10 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
+import com.extendedclip.deluxemenus.action.ActionType;
+import com.extendedclip.deluxemenus.action.ClickAction;
+import com.extendedclip.deluxemenus.action.ClickActionTask;
+import com.extendedclip.deluxemenus.config.DeluxeMenusConfig;
 import com.extendedclip.deluxemenus.events.DeluxeMenusOpenMenuEvent;
 import com.extendedclip.deluxemenus.events.DeluxeMenusPreOpenMenuEvent;
 import com.extendedclip.deluxemenus.menu.command.RegistrableMenuCommand;
@@ -21,6 +25,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -191,7 +198,7 @@ public class Menu {
         player.updateInventory();
     }
 
-    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close, final boolean executeCloseActions) {
+    public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close, final boolean executeCloseActions, final boolean runCloseCommmands) {
         Optional<MenuHolder> optionalHolder = getMenuHolder(player);
         if (optionalHolder.isEmpty()) {
             return;
@@ -214,6 +221,10 @@ public class Menu {
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
+
+        if (runCloseCommmands) {
+            holder.getMenu().map(Menu::options).map(MenuOptions::guiCloseCommands).ifPresent(commands -> executeCommands(plugin, player, commands, holder));
+        }
     }
 
     public static void closeMenuForShutdown(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
@@ -224,7 +235,7 @@ public class Menu {
     }
 
     public static void closeMenu(final @NotNull DeluxeMenus plugin, final @NotNull Player player, final boolean close) {
-        closeMenu(plugin, player, close, false);
+        closeMenu(plugin, player, close, true, true);
     }
 
     private boolean hasOpenBypassPerm(final @NotNull Player viewer) {
@@ -371,6 +382,7 @@ public class Menu {
                 }
 
                 iStack = plugin.getMenuItemMarker().mark(iStack);
+                plugin.markDupeProtection(iStack);
 
                 int slot = item.options().slot();
 
@@ -388,10 +400,12 @@ public class Menu {
                     update = true;
                 }
 
-                inventory.setItem(item.options().slot(), iStack);
+                inventory.setItem(slot, iStack);
             }
 
             final boolean updatePlaceholders = update;
+
+            holder.getMenu().map(Menu::options).map(MenuOptions::guiOpenCommands).ifPresent(commands -> executeCommands(plugin, viewer, commands, holder));
 
             scheduler.runTask(viewer, () -> {
                 if (options.refresh()) {
@@ -415,6 +429,49 @@ public class Menu {
                 Bukkit.getPluginManager().callEvent(openEvent);
             });
         });
+    }
+
+    private static void executeCommands(final @NotNull DeluxeMenus plugin, final @NotNull Player viewer, final @NotNull List<String> commands, final @NotNull MenuHolder holder) {
+        for (String command : commands) {
+            ActionType type = ActionType.getByStart(command);
+            if (type == null) continue;
+
+            command = command.replaceFirst(Pattern.quote(type.getIdentifier()), "").trim();
+
+            ClickAction action = new ClickAction(type, command);
+
+            Matcher d = DeluxeMenusConfig.DELAY_MATCHER.matcher(command);
+
+            if (d.find()) {
+                action.setDelay(d.group(1));
+                command = command.replaceFirst(Pattern.quote(d.group()), "");
+            }
+
+            Matcher ch = DeluxeMenusConfig.CHANCE_MATCHER.matcher(command);
+
+            if (ch.find()) {
+                action.setChance(ch.group(1));
+                command = command.replaceFirst(Pattern.quote(ch.group()), "");
+            }
+
+            action.setExecutable(command);
+
+            final ClickActionTask actionTask = new ClickActionTask(
+                    plugin,
+                    viewer.getUniqueId(),
+                    action.getType(),
+                    command,
+                    holder.getTypedArgs(),
+                    true,
+                    true
+            );
+
+            if (action.hasDelay()) {
+                actionTask.runTaskLater(plugin, action.getDelay(holder));
+            } else {
+                actionTask.runTask(plugin);
+            }
+        }
     }
 
     public void refreshForAll() {

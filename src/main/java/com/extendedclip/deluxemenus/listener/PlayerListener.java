@@ -7,6 +7,7 @@ import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import com.extendedclip.deluxemenus.scheduler.scheduling.schedulers.TaskScheduler;
+import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.bukkit.entity.Player;
@@ -18,11 +19,13 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class PlayerListener extends Listener {
 
@@ -37,7 +40,7 @@ public class PlayerListener extends Listener {
         this.scheduler = plugin.getScheduler();
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandExecute(PlayerCommandPreprocessEvent event) {
 
         final String cmd = event.getMessage().substring(1);
@@ -69,11 +72,9 @@ public class PlayerListener extends Listener {
 
     @EventHandler
     public void onOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player)) {
+        if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
-
-        final Player player = (Player) event.getPlayer();
 
         if (player.isSleeping()) {
             event.setCancelled(true);
@@ -86,30 +87,58 @@ public class PlayerListener extends Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-
-        if (!(event.getPlayer() instanceof Player)) {
+        if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
 
-        final Player player = (Player) event.getPlayer();
-
         if (Menu.isInMenu(player)) {
-            scheduler.runTaskLater(player, () -> {
-                Menu.closeMenu(plugin, player, false);
-                Menu.cleanInventory(plugin, player);
-                player.updateInventory();
-            }, 3L);
+            Menu.closeMenu(plugin, player, false);
         }
+
+        scheduler.runTaskLater(player, () -> {
+            Menu.cleanInventory(plugin, player);
+
+            boolean removed = false;
+
+            for (ItemStack itemStack : player.getInventory().getContents()) {
+                if (itemStack == null) continue;
+                if (!plugin.getMenuItemMarker().isMarked(itemStack)) continue;
+                if (!plugin.isDupeProtectionFlagged(itemStack)) continue;
+
+                player.getInventory().remove(itemStack);
+                removed = true;
+
+                plugin.debug(
+                        DebugLevel.LOWEST,
+                        Level.INFO,
+                        "DeluxeMenus item found in main inventory on close. Removing it."
+                );
+            }
+
+            ItemStack offhand = player.getInventory().getItemInOffHand();
+            if (plugin.getMenuItemMarker().isMarked(offhand) && plugin.isDupeProtectionFlagged(offhand)) {
+                player.getInventory().setItemInOffHand(null);
+                removed = true;
+
+                plugin.debug(
+                        DebugLevel.LOWEST,
+                        Level.INFO,
+                        "DeluxeMenus item found in offhand on close. Removing it."
+                );
+            }
+
+            if (removed) {
+                player.updateInventory();
+            }
+        }, 1L);
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onClick(InventoryClickEvent event) {
 
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-
-        final Player player = (Player) event.getWhoClicked();
 
         final Optional<MenuHolder> optionalHolder = Menu.getMenuHolder(player);
 
