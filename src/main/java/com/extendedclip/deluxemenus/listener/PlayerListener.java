@@ -183,8 +183,7 @@ public class PlayerListener extends Listener {
         }
 
         if (event.getClick() == ClickType.MIDDLE) {
-            if (handleClick(player, holder, item.options().middleClickHandler(), item.options().middleClickRequirements())) {
-            }
+            handleClick(player, holder, item.options().middleClickHandler(), item.options().middleClickRequirements());
         }
     }
 
