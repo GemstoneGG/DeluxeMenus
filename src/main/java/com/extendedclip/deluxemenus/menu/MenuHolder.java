@@ -103,7 +103,7 @@ public class MenuHolder implements InventoryHolder {
     }
 
     public @NotNull String setPlaceholders(final @NotNull String string) {
-        final Player player = this.placeholderPlayer != null ? this.placeholderPlayer : this.getViewer();
+        final Player player = this.placeholderPlayer != null ? this.placeholderPlayer : this.viewer;
         if (player == null) {
             return string;
         }
@@ -112,7 +112,7 @@ public class MenuHolder implements InventoryHolder {
     }
 
     public @NotNull String setArguments(final @NotNull String string) {
-        final Player player = this.placeholderPlayer != null ? this.placeholderPlayer : this.getViewer();
+        final Player player = this.placeholderPlayer != null ? this.placeholderPlayer : this.viewer;
 
         return StringUtils.replaceArguments(
                 string,
@@ -173,11 +173,11 @@ public class MenuHolder implements InventoryHolder {
             }
 
             if (active.isEmpty()) {
-                scheduler.runTask(getViewer(), () -> Menu.closeMenu(plugin, getViewer(), true));
+                scheduler.runTask(viewer, () -> Menu.closeMenu(plugin, viewer, true));
                 return;
             }
 
-            scheduler.runTask(getViewer(), () -> {
+            scheduler.runTask(viewer, () -> {
 
                 for (int slot : slotsToClear) {
                     getInventory().setItem(slot, null);
@@ -266,7 +266,7 @@ public class MenuHolder implements InventoryHolder {
                 .orElse(10);
 
         updateTask = scheduler.runTaskTimer(
-                getViewer(),
+                viewer,
                 () -> {
 
                     if (updating) {
