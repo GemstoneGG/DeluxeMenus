@@ -165,7 +165,7 @@ public class ClickActionTask extends UniversalRunnable {
                 break;
 
             case CLOSE:
-                Menu.closeMenu(plugin, player, true, true);
+                Menu.closeMenu(plugin, player, true, true, false);
                 break;
 
             case OPEN_GUI_MENU:
