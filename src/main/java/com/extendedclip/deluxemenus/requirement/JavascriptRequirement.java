@@ -27,8 +27,8 @@ public class JavascriptRequirement extends Requirement {
     this.expression = expression;
     if (engine == null) {
       if (manager.isProvidedFor(ScriptEngineManager.class)) {
-        final RegisteredServiceProvider provider = manager.getRegistration(ScriptEngineManager.class);
-        engine = (ScriptEngineManager) provider.getProvider();
+        final RegisteredServiceProvider<ScriptEngineManager> provider = manager.getRegistration(ScriptEngineManager.class);
+        engine = provider.getProvider();
       } else {
         engine = new ScriptEngineManager();
         manager.register(ScriptEngineManager.class, engine, plugin, ServicePriority.Highest);

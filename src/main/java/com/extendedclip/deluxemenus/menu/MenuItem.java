@@ -81,11 +81,7 @@ public class MenuItem {
                 return (ItemStack) object;
             }
             return null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        } catch (IOException e) {
-            return null;
-        } catch (ClassNotFoundException e) {
+        } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
             return null;
         }
     }
@@ -282,20 +278,18 @@ public class MenuItem {
         LoreAppendMode mode = this.options.loreAppendMode().orElse(LoreAppendMode.OVERRIDE);
         if (!this.options.hasLore() && this.options.loreAppendMode().isEmpty()) mode = LoreAppendMode.IGNORE;
         switch (mode) {
-            case IGNORE: // DM lore is not added at all
-                lore.addAll(itemLore);
-                break;
-            case TOP: // DM lore is added at the top
+            case IGNORE -> // DM lore is not added at all
+                  lore.addAll(itemLore);
+            case TOP -> {
                 lore.addAll(getMenuItemLore(holder, this.options.lore()));
                 lore.addAll(itemLore);
-                break;
-            case BOTTOM: // DM lore is bottom at the bottom
+            }
+            case BOTTOM -> {
                 lore.addAll(itemLore);
                 lore.addAll(getMenuItemLore(holder, this.options.lore()));
-                break;
-            case OVERRIDE: // Lore from DM overrides the lore from the item
-                lore.addAll(getMenuItemLore(holder, this.options.lore()));
-                break;
+            }
+            case OVERRIDE -> // Lore from DM overrides the lore from the item
+                  lore.addAll(getMenuItemLore(holder, this.options.lore()));
         }
 
         itemMeta.setLore(lore);
@@ -373,69 +367,65 @@ public class MenuItem {
                         Level.WARNING,
                         "Trim pattern is not set for item with trim material " + trimMaterialName.get()
                 );
-            } else if (trimPatternName.isPresent()) {
-                plugin.debug(
-                        DebugLevel.HIGHEST,
-                        Level.WARNING,
-                        "Trim material is not set for item with trim pattern " + trimPatternName.get()
-                );
-            }
+            } else trimPatternName.ifPresent(s -> plugin.debug(
+                  DebugLevel.HIGHEST,
+                  Level.WARNING,
+                  "Trim material is not set for item with trim pattern " + s
+            ));
         }
 
-        if (itemMeta instanceof LeatherArmorMeta && this.options.rgb().isPresent()) {
-            final LeatherArmorMeta leatherArmorMeta = (LeatherArmorMeta) itemMeta;
+        switch (itemMeta) {
+            case LeatherArmorMeta leatherArmorMeta when this.options.rgb().isPresent() -> {
 
-            final Color color = parseRGBColor(holder.setPlaceholdersAndArguments(this.options.rgb().get()));
-            if (color != null) {
-                leatherArmorMeta.setColor(color);
-            } else {
-                plugin.debug(
-                        DebugLevel.HIGHEST,
-                        Level.WARNING,
-                        "Invalid rgb colors found for leather armor: " + this.options.rgb().get()
-                );
-            }
-
-            itemStack.setItemMeta(leatherArmorMeta);
-        } else if (itemMeta instanceof FireworkEffectMeta && this.options.rgb().isPresent()) {
-            final FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) itemMeta;
-            final Color color = parseRGBColor(holder.setPlaceholdersAndArguments(this.options.rgb().get()));
-            if (color != null) {
-                fireworkEffectMeta.setEffect(FireworkEffect.builder().withColor(color).build());
-            } else {
-                plugin.debug(
-                        DebugLevel.HIGHEST,
-                        Level.WARNING,
-                        "Invalid RGB color found for firework or firework star: " + this.options.rgb().get()
-                );
-            }
-            itemStack.setItemMeta(fireworkEffectMeta);
-        } else if (itemMeta instanceof EnchantmentStorageMeta && !this.options.enchantments().isEmpty()) {
-            final EnchantmentStorageMeta enchantmentStorageMeta = (EnchantmentStorageMeta) itemMeta;
-            for (final Map.Entry<Enchantment, Integer> entry : this.options.enchantments().entrySet()) {
-                final boolean result = enchantmentStorageMeta.addStoredEnchant(entry.getKey(), entry.getValue(), true);
-                if (!result) {
+                final Color color = parseRGBColor(holder.setPlaceholdersAndArguments(this.options.rgb().get()));
+                if (color != null) {
+                    leatherArmorMeta.setColor(color);
+                } else {
                     plugin.debug(
-                            DebugLevel.HIGHEST,
-                            Level.INFO,
-                            "Failed to add enchantment " + entry.getKey().getName() + " to item " + itemStack.getType()
+                          DebugLevel.HIGHEST,
+                          Level.WARNING,
+                          "Invalid rgb colors found for leather armor: " + this.options.rgb().get()
                     );
                 }
+
+                itemStack.setItemMeta(leatherArmorMeta);
             }
-            itemStack.setItemMeta(enchantmentStorageMeta);
-        } else {
-            itemStack.setItemMeta(itemMeta);
+            case FireworkEffectMeta fireworkEffectMeta when this.options.rgb().isPresent() -> {
+                final Color color = parseRGBColor(holder.setPlaceholdersAndArguments(this.options.rgb().get()));
+                if (color != null) {
+                    fireworkEffectMeta.setEffect(FireworkEffect.builder().withColor(color).build());
+                } else {
+                    plugin.debug(
+                          DebugLevel.HIGHEST,
+                          Level.WARNING,
+                          "Invalid RGB color found for firework or firework star: " + this.options.rgb().get()
+                    );
+                }
+                itemStack.setItemMeta(fireworkEffectMeta);
+            }
+            case EnchantmentStorageMeta enchantmentStorageMeta when !this.options.enchantments().isEmpty() -> {
+                for (final Map.Entry<Enchantment, Integer> entry : this.options.enchantments().entrySet()) {
+                    final boolean result = enchantmentStorageMeta.addStoredEnchant(entry.getKey(), entry.getValue(), true);
+                    if (!result) {
+                        plugin.debug(
+                              DebugLevel.HIGHEST,
+                              Level.INFO,
+                              "Failed to add enchantment " + entry.getKey().getName() + " to item " + itemStack.getType()
+                        );
+                    }
+                }
+                itemStack.setItemMeta(enchantmentStorageMeta);
+            }
+            default -> itemStack.setItemMeta(itemMeta);
         }
 
         if (!(itemMeta instanceof EnchantmentStorageMeta) && !this.options.enchantments().isEmpty()) {
             this.options.enchantments().forEach((enchantment, level) -> itemMeta.addEnchant(enchantment, level, true));
         }
 
-        if (this.options.lightLevel().isPresent() && itemMeta instanceof BlockDataMeta) {
-            final BlockDataMeta blockDataMeta = (BlockDataMeta) itemMeta;
+        if (this.options.lightLevel().isPresent() && itemMeta instanceof BlockDataMeta blockDataMeta) {
             final BlockData blockData = blockDataMeta.getBlockData(itemStack.getType());
-            if (blockData instanceof Light) {
-                final Light light = (Light) blockData;
+            if (blockData instanceof Light light) {
                 final String parsedLightLevel = holder.setPlaceholdersAndArguments(this.options.lightLevel().get());
                 try {
                     final int lightLevel = Math.min(Integer.parseInt(parsedLightLevel), light.getMaximumLevel());

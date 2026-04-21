@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class DeluxeMenusCommand implements TabExecutor {
             final @NotNull CommandSender sender,
             final @NotNull Command command,
             final @NotNull String label,
-            final @NotNull String[] args
+            final @NotNull String @NonNull [] args
     ) {
         final List<String> arguments = Arrays.asList(args);
 
@@ -58,7 +59,7 @@ public class DeluxeMenusCommand implements TabExecutor {
             return true;
         }
 
-        final SubCommand subCommand = subCommands.get(arguments.get(0).toLowerCase());
+        final SubCommand subCommand = subCommands.get(arguments.getFirst().toLowerCase());
 
         if (subCommand != null) {
             subCommand.execute(sender, arguments.subList(1, arguments.size()));
@@ -74,7 +75,7 @@ public class DeluxeMenusCommand implements TabExecutor {
             final @NotNull CommandSender sender,
             final @NotNull Command command,
             final @NotNull String label,
-            final @NotNull String[] args
+            final @NotNull String @NonNull [] args
     ) {
         final List<String> arguments = Arrays.asList(args);
 

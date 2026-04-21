@@ -356,7 +356,7 @@ public class DeluxeMenus extends JavaPlugin {
                     .map(Menu::getMenuItems)
                     .flatMap(c -> c.values().stream().map(TreeMap::values).flatMap(Collection::stream))
                     .map(MenuItem::options)
-                    .collect(Collectors.toList());
+                    .toList();
             results.put("Byte", options.stream().filter(option -> option.nbtByte().isPresent()).mapToInt(b -> 1).sum());
             results.put("Bytes", options.stream().filter(option -> !option.nbtBytes().isEmpty()).mapToInt(b -> 1).sum());
             results.put("Short", options.stream().filter(option -> option.nbtShort().isPresent()).mapToInt(s -> 1).sum());

@@ -41,7 +41,7 @@ public class ExecuteCommand extends SubCommand {
             return;
         }
 
-        Player target = Bukkit.getPlayerExact(arguments.get(0));
+        Player target = Bukkit.getPlayerExact(arguments.getFirst());
         if (target == null) {
             plugin.sms(sender, Messages.PLAYER_IS_NOT_ONLINE.message().replaceText(PLAYER_REPLACER_BUILDER.replacement(arguments.get(1)).build()));
             return;
@@ -113,11 +113,11 @@ public class ExecuteCommand extends SubCommand {
         }
 
         if (arguments.size() == 1) {
-            if (arguments.get(0).isEmpty()) {
+            if (arguments.getFirst().isEmpty()) {
                 return List.of(getName());
             }
 
-            final String firstArgument = arguments.get(0).toLowerCase();
+            final String firstArgument = arguments.getFirst().toLowerCase();
 
             if (getName().startsWith(firstArgument)) {
                 return List.of(getName());
@@ -126,7 +126,7 @@ public class ExecuteCommand extends SubCommand {
             return null;
         }
 
-        final String firstArgument = arguments.get(0).toLowerCase();
+        final String firstArgument = arguments.getFirst().toLowerCase();
 
         if (!getName().equals(firstArgument)) {
             return null;

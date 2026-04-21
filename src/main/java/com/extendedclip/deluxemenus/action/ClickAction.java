@@ -101,7 +101,6 @@ public class ClickAction {
    * @param holder the holder to parse placeholders in the delay for.
    * @return the parsed delay
    */
-  @SuppressWarnings("UnstableApiUsage")
   public long getDelay(@NotNull final MenuHolder holder) {
     if (delay == null || delay.isEmpty()) {
       return 0;
@@ -118,7 +117,6 @@ public class ClickAction {
    * @param holder the holder to parse placeholders in the chance for.
    * @return true if the chance has passed, false otherwise
    */
-  @SuppressWarnings("UnstableApiUsage")
   public boolean checkChance(@NotNull final MenuHolder holder) {
     if (chance == null) {
       return true;
