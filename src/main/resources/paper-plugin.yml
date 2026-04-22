@@ -1,5 +1,11 @@
 name: DeluxeMenus
 main: com.extendedclip.deluxemenus.DeluxeMenus
-version: ${version}
-api-version: '1.13'
+version: '${version}'
+api-version: '1.21'
 folia-supported: true
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: false
+      join-classpath: true
