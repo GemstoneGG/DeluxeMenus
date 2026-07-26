@@ -178,9 +178,6 @@ public class MenuHolder implements InventoryHolder {
             }
 
             scheduler.runTask(viewer, () -> {
-                // Only held across the inventory mutation below. Holding it across the rebuild above
-                // instead means every click landing during a refresh cycle is swallowed by the
-                // isUpdating gate in PlayerListener, which is what made refreshes need a second click.
                 setUpdating(true);
 
                 try {
@@ -221,8 +218,6 @@ public class MenuHolder implements InventoryHolder {
                         stopPlaceholderUpdate();
                     }
                 } finally {
-                    // Without this a throw mid-rebuild would leave the gate closed for good,
-                    // making the menu permanently unclickable.
                     setUpdating(false);
                 }
             });
