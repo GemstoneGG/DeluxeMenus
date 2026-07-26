@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.gradleup.shadow") version("9.4.1")
+    id("com.gradleup.shadow") version("9.6.1")
     id("com.github.ben-manes.versions") version("0.54.0")
 }
 
@@ -49,7 +49,7 @@ dependencies {
     implementation(libs.adventure.minimessage)
     implementation(libs.bstats)
 
-    compileOnly("org.jetbrains:annotations:23.0.0")
+    compileOnly("org.jetbrains:annotations:26.1.0")
 }
 
 tasks {
