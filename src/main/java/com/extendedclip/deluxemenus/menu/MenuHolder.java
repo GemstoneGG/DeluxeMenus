@@ -29,7 +29,9 @@ public class MenuHolder implements InventoryHolder {
     private MyScheduledTask updateTask = null;
     private MyScheduledTask refreshTask = null;
     private Inventory inventory;
-    private boolean updating;
+
+    private volatile boolean updating;
+
     private boolean parsePlaceholdersInArguments;
     private boolean parsePlaceholdersAfterArguments;
     private Map<String, String> typedArgs;
@@ -135,8 +137,6 @@ public class MenuHolder implements InventoryHolder {
             return;
         }
 
-        setUpdating(true);
-
         scheduler.runTaskAsynchronously(() -> {
 
             final Set<MenuItem> active = new HashSet<>();
@@ -178,45 +178,53 @@ public class MenuHolder implements InventoryHolder {
             }
 
             scheduler.runTask(viewer, () -> {
+                // Only held across the inventory mutation below. Holding it across the rebuild above
+                // instead means every click landing during a refresh cycle is swallowed by the
+                // isUpdating gate in PlayerListener, which is what made refreshes need a second click.
+                setUpdating(true);
 
-                for (int slot : slotsToClear) {
-                    getInventory().setItem(slot, null);
-                }
-
-                boolean update = false;
-
-                for (MenuItem item : active) {
-
-                    ItemStack iStack = item.getItemStack(this);
-
-                    if (iStack == null) {
-                        continue;
+                try {
+                    for (int slot : slotsToClear) {
+                        getInventory().setItem(slot, null);
                     }
 
-                    iStack = plugin.getMenuItemMarker().mark(iStack);
+                    boolean update = false;
 
-                    int slot = item.options().slot();
+                    for (MenuItem item : active) {
 
-                    if (slot >= menu.options().size()) {
-                        continue;
+                        ItemStack iStack = item.getItemStack(this);
+
+                        if (iStack == null) {
+                            continue;
+                        }
+
+                        iStack = plugin.getMenuItemMarker().mark(iStack);
+
+                        int slot = item.options().slot();
+
+                        if (slot >= menu.options().size()) {
+                            continue;
+                        }
+
+                        if (item.options().updatePlaceholders()) {
+                            update = true;
+                        }
+
+                        getInventory().setItem(item.options().slot(), iStack);
                     }
 
-                    if (item.options().updatePlaceholders()) {
-                        update = true;
+                    setActiveItems(active);
+
+                    if (update && updateTask == null) {
+                        startUpdatePlaceholdersTask();
+                    } else if (!update && updateTask != null) {
+                        stopPlaceholderUpdate();
                     }
-
-                    getInventory().setItem(item.options().slot(), iStack);
+                } finally {
+                    // Without this a throw mid-rebuild would leave the gate closed for good,
+                    // making the menu permanently unclickable.
+                    setUpdating(false);
                 }
-
-                setActiveItems(active);
-
-                if (update && updateTask == null) {
-                    startUpdatePlaceholdersTask();
-                } else if (!update && updateTask != null) {
-                    stopPlaceholderUpdate();
-                }
-
-                setUpdating(false);
             });
         });
     }

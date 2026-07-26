@@ -35,23 +35,31 @@ public class FoliaScheduledTask implements MyScheduledTask {
     }
 
     public void cancel() {
+        if (this.task == null) {
+            return;
+        }
+
         this.task.cancel();
     }
 
     public boolean isCancelled() {
-        return this.task.isCancelled();
+        return this.task == null || this.task.isCancelled();
     }
 
     public Plugin getOwningPlugin() {
-        return this.task.getOwningPlugin();
+        return this.task == null ? null : this.task.getOwningPlugin();
     }
 
     public boolean isCurrentlyRunning() {
+        if (this.task == null) {
+            return false;
+        }
+
         final ScheduledTask.ExecutionState state = this.task.getExecutionState();
         return state == ScheduledTask.ExecutionState.RUNNING || state == ScheduledTask.ExecutionState.CANCELLED_RUNNING;
     }
 
     public boolean isRepeatingTask() {
-        return this.task.isRepeatingTask();
+        return this.task != null && this.task.isRepeatingTask();
     }
 }

@@ -213,14 +213,22 @@ public class Menu {
             holder.getMenu().map(Menu::options).map(MenuOptions::closeHandler).flatMap(h -> h).ifPresent(h -> h.onClick(holder));
         }
 
-        if (close) {
-            plugin.getScheduler().runTask(player, () -> {
-                player.closeInventory();
-                cleanInventory(plugin, player);
-            });
-        }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
+
+        if (close) {
+            final TaskScheduler scheduler = plugin.getScheduler();
+            final Runnable closeInventory = () -> {
+                player.closeInventory();
+                cleanInventory(plugin, player);
+            };
+
+            if (scheduler.isEntityThread(player)) {
+                closeInventory.run();
+            } else {
+                scheduler.runTask(player, closeInventory);
+            }
+        }
 
         if (runCloseCommmands) {
             holder.getMenu().map(Menu::options).map(MenuOptions::guiCloseCommands).ifPresent(commands -> executeCommands(plugin, player, commands, holder));
@@ -467,9 +475,9 @@ public class Menu {
             );
 
             if (action.hasDelay()) {
-                actionTask.runTaskLater(plugin, action.getDelay(holder));
+                plugin.getScheduler().runTaskLater(viewer, actionTask, action.getDelay(holder));
             } else {
-                actionTask.runTask(plugin);
+                plugin.getScheduler().runTask(viewer, actionTask);
             }
         }
     }
