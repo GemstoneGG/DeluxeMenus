@@ -14,6 +14,8 @@ version = "$majorVersion-$minorVersion"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
+    maven("https://repo.loohpjames.com/repository")
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.phoenixdevt.fr/repository/maven-public/")
@@ -21,8 +23,6 @@ repositories {
     maven("https://repo.nexomc.com/releases/")
     maven("https://repo.oraxen.com/releases")
     maven("https://maven.devs.beer/")
-    maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://jitpack.io")
 }
 
 dependencies {
